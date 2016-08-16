@@ -17,7 +17,7 @@
 # along with this program. If not, see <http://www.gnu.org/licenses/>.
 
 
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import os
 import argparse
@@ -87,12 +87,13 @@ for image in files_jpeg_in:
         images_processed.append( image )
     except ValueError:
         print(ValueError)
-print( "{} image was processed." if nb_images_processed < 1 else "{} images were processed.").format(nb_images_processed)
+print( "{} image was processed.".format(nb_images_processed) if nb_images_processed < 1 else "{} images were processed.".format(nb_images_processed) )
 
 
 # SAVING RESULT
 if args.json != None:
     try:
+        print("JSON: " + args.json)
         with open( args.json, "w") as result_out:
             json.dump(images_processed, result_out, sort_keys=True, indent=1)
     except ValueError:
