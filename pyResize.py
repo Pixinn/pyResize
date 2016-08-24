@@ -70,17 +70,17 @@ images_processed = []
 nb_images_processed = 0
 for image in files_jpeg_in:
     # output folder
-    dir_out = ( args.dir_output + os.path.dirname(image[0].replace(args.dir_input,"")) ).replace("//","/") + "/"
+    dir_out = ( args.dir_output + "/" + os.path.dirname(image[0].replace(args.dir_input,"")) ).replace("//","/") + "/"
     if not os.path.exists( dir_out ):
         os.makedirs( dir_out )
     filename = os.path.basename( image[0] )
     # Processing
     try:
-        filepath_output = (dir_out+filename).replace("//","/")
+        filepath_output = "\"" + (dir_out+filename).replace("//","/") + "\""
         # Only if the destination file is not up to date
         time_previous_modification = result_previous.get(  image[0] )
         if not os.path.exists( filepath_output ) or time_previous_modification == None or not time_previous_modification == image[1] :
-            cmd = "convert " + image[0] + " -resize " + args.size + "x" + args.size + " -quality " + str(args.quality) + " -filter Lanczos " + filepath_output
+            cmd = "convert " + "\"" + image[0] + "\"" + " -resize " + args.size + "x" + args.size + " -quality " + str(args.quality) + " -filter Lanczos " + filepath_output
             print( cmd )
             if os.system( cmd ) == 0:
                 nb_images_processed += 1
