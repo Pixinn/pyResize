@@ -65,8 +65,11 @@ else:
 
 # PROCESSING THE FILES
 images_processed = []
-nb_images_processed = 0
+images_ignored = []
+images_error = []
 for image in files_jpeg_in:
+    image_path = image[0]
+    image_time_modified = image[1]
     # output folder
     dir_out = ( args.dir_output + "/" + os.path.dirname(image[0].replace(args.dir_input,"")) ).replace("//","/") + "/"
     if not os.path.exists( dir_out ):
@@ -77,15 +80,27 @@ for image in files_jpeg_in:
         filepath_output = "\"" + (dir_out+filename).replace("//","/") + "\""
         # Only if the destination file is not up to date
         time_previous_modification = result_previous.get(  image[0] )
-        if not os.path.exists( filepath_output ) or time_previous_modification == None or not time_previous_modification == image[1] :
+        if not os.path.exists( filepath_output.strip('\"') ) or time_previous_modification == None or not time_previous_modification == image[1] :
+
+            print("=========\nCurr path: ", image_path, "\nModified: ", image_time_modified  )
+            print("Target path: ", filepath_output)
+            print("Target exists? ", os.path.exists( filepath_output.strip('\"') ), "\nSaved modified: ", time_previous_modification)
+
             cmd = "convert " + "\"" + image[0] + "\"" + " -resize " + args.size + "x" + args.size + " -quality " + str(args.quality) + " -filter Lanczos " + filepath_output
             print( cmd )
             if os.system( cmd ) == 0:
-                nb_images_processed += 1
-        images_processed.append( image )
+                images_processed.append( image )
+            else:
+                images_error.append( image )
+        else:
+            images_ignored.append( image )
+
     except ValueError:
         print(ValueError)
-print( "{} image was processed.".format(nb_images_processed) if nb_images_processed < 1 else "{} images were processed.".format(nb_images_processed) )
+
+print( "{} image was processed.".format(len(images_processed)) if len(images_processed) < 1 else "{} images were processed.".format(len(images_processed)))
+print( "{} image was ignored.".format(len(images_ignored)) if len(images_ignored) < 1 else "{} images were ignored.".format(len(images_ignored)))
+print( "{} error.".format(len(images_error)) if len(images_error) < 1 else "{} errors.".format(len(images_error)))
 
 
 # SAVING RESULT
@@ -93,7 +108,7 @@ if args.json != None:
     try:
         print("JSON: " + args.json)
         with open( args.json, "w") as result_out:
-            json.dump(images_processed, result_out, sort_keys=True, indent=1)
+            json.dump(images_processed + images_ignored, result_out, sort_keys=True, indent=1)
     except ValueError:
         print(ValueError)
         exit(-1)
