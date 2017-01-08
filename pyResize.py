@@ -54,23 +54,24 @@ files_jpeg_in = [ [os.path.join(root, name), os.path.getmtime(os.path.join(root,
 
 # REMOVING THE IGNORED PATHS
 patterns_ignored = []
+images_ignored = []
 if args.ignore != None and os.path.exists( args.ignore ):
     with open(args.ignore, 'r') as text_ignored:
         for line in text_ignored:
             patterns_ignored.append(line.strip('\n'))
 
-images_ignored = []
-for image in files_jpeg_in:
-    for pattern in patterns_ignored:
-        path_image = image[0]
-        if pattern in path_image:
-            if args.verbose:
-                print("Ignoring ", path_image, ": ", pattern, "pattern found")
-            images_ignored.append(image)
-            break
-for image in images_ignored:
-    files_jpeg_in.remove(image)
-
+    for image in files_jpeg_in:
+        for pattern in patterns_ignored:
+            path_image = image[0]
+            if pattern in path_image:
+                if args.verbose:
+                    print("Ignoring ", path_image, ": ", pattern, "pattern found")
+                images_ignored.append(image)
+                break
+    for image in images_ignored:
+        files_jpeg_in.remove(image)
+elif args.verbose:
+    print("No suitable ignore list provided")
 
 # LOADING PREVIOUS ITERATION RESULT
 result_previous = dict();
@@ -83,13 +84,13 @@ if args.json != None and os.path.exists( args.json ):
     except ValueError:
         print(ValueError)
         exit(-1)
-else:
+elif args.verbose:
     print("No suitable JSON file provided")
 
 
 # PROCESSING THE FILES
 images_processed = []
-images_ignored = []
+images_notprocessed = []
 images_error = []
 for image in files_jpeg_in:
     path_image = image[0]
@@ -109,7 +110,7 @@ for image in files_jpeg_in:
             if args.verbose:
                 print("=========\nSource path: ", path_image, "\nSource modification time: ", image_time_modified  )
                 print("Target path: ", filepath_output)
-                print("Target exists? ", os.path.exists( filepath_output.strip('\"') ), "\Target modification time: ", time_previous_modification)
+                print("Target exists? ", os.path.exists( filepath_output.strip('\"') ), "\nTarget modification time: ", time_previous_modification)
 
             cmd = "convert " + "\"" + image[0] + "\"" + " -resize " + args.size + "x" + args.size + " -quality " + str(args.quality) + " -filter Lanczos " + filepath_output
             print( cmd )
@@ -118,13 +119,14 @@ for image in files_jpeg_in:
             else:
                 images_error.append( image )
         else:
-            images_ignored.append( image )
+            images_notprocessed.append( image )
 
     except ValueError:
         print(ValueError)
 
 print( "{} image was processed.".format(len(images_processed)) if len(images_processed) <= 1 else "{} images were processed.".format(len(images_processed)))
-print( "{} image was ignored.".format(len(images_ignored)) if len(images_ignored) <= 1 else "{} images were ignored.".format(len(images_ignored)))
+nb_ignored = len(images_ignored) + len(images_notprocessed)
+print( "{} image was ignored.".format(nb_ignored) if nb_ignored <= 1 else "{} images were ignored.".format(nb_ignored))
 print( "{} error.".format(len(images_error)) if len(images_error) <= 1 else "{} errors.".format(len(images_error)))
 
 
@@ -133,7 +135,7 @@ if args.json != None:
     try:
         print("JSON: " + args.json)
         with open( args.json, "w") as result_out:
-            json.dump(images_processed + images_ignored, result_out, sort_keys=True, indent=1)
+            json.dump(images_processed + images_notprocessed, result_out, sort_keys=True, indent=1)
     except ValueError:
         print(ValueError)
         exit(-1)
