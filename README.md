@@ -1,5 +1,6 @@
 This script recursively resizes all Jpeg files in a folder.
 The folder structure of the folder will be mirrored in the destination.
+Source file-paths matching provided patterns can be ignored. Result can be saved in a json file so the unmodified input files won't be processed next time.
 It relies on "convert" from _ImageMagick_.
 
 # Requirements
@@ -9,7 +10,7 @@ It relies on "convert" from _ImageMagick_.
 
 # usage
 
-pyConvert.py [-h] [-j JSON] [-q QUALITY] input output size
+usage: pyResize.py [-h] [-q QUALITY] [-j JSON] [-i IGNORE] [-v] input output size
 
 ## Required arguments
 * input  : Input folder containing the Jpeg to recursively process
@@ -17,6 +18,17 @@ pyConvert.py [-h] [-j JSON] [-q QUALITY] input output size
 * size   : Long edge size desired
 
 ## Optional arguments
-* -j --json    : A report that can be used during a later call in order to process only the source images that have been modified
-* -q --quality : Jpeg quality [0:100]
-* -h --help    : Displays help
+* -h, --help            : show this help message and exit
+* -q QUALITY, --quality QUALITY
+                        : Quality of the saved jpeg, from 0 to 100
+* -j JSON, --json JSON  : JSON file used to determine if an image needs to be
+                        processed a second time.
+* -i IGNORE, --ignore IGNORE
+                        : Text file containing pattern in file paths to ignore.
+* -v, --verbose         : Display more info while running.
+
+## Ignore list
+An "ignore list" can be provided. It is a text file containing patterns to ignore.  
+One pattern per line.
+
+If a source filepath contains one of those patterns, it won't be processed.
