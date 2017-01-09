@@ -28,7 +28,6 @@ parser.add_argument("dir_input", help="Input directory containing your images")
 parser.add_argument("dir_output", help="Output directory")
 parser.add_argument("size", help="Targeted *long* edge size")
 parser.add_argument("-q","--quality", type=int, default=75, help="Quality of the saved jpeg, from 0 to 100")
-parser.add_argument("-j","--json", help="JSON file used to determine if an image needs to be processed a second time.")
 parser.add_argument("-i","--ignore", help="Text file containing pattern in file paths to ignore.")
 parser.add_argument("-v","--verbose", action="store_true", help="Display more info while running.")
 args = parser.parse_args()
@@ -42,6 +41,9 @@ if args.quality < 0 or args.quality > 100:
 if not os.path.exists( args.dir_output ):
     os.makedirs( args.dir_output )
 
+
+dir_out_root = (args.dir_output + "/").replace("//","/")
+json_file = dir_out_root + "pyResize.json"
 
 
 # LISTING THE JPEGS FILES
@@ -75,9 +77,9 @@ elif args.verbose:
 
 # LOADING PREVIOUS ITERATION RESULT
 result_previous = dict();
-if args.json != None and os.path.exists( args.json ):
+if os.path.exists( json_file ):
     try:
-        with open(args.json, "r") as result_in:
+        with open(json_file, "r") as result_in:
             decoded = json.load( result_in )
         for image in decoded:
             result_previous[ image[0] ] = image[1]
@@ -85,7 +87,7 @@ if args.json != None and os.path.exists( args.json ):
         print(ValueError)
         exit(-1)
 elif args.verbose:
-    print("No suitable JSON file provided")
+    print("No suitable JSON file found.")
 
 
 # PROCESSING THE FILES
@@ -96,7 +98,7 @@ for image in files_jpeg_in:
     path_image = image[0]
     image_time_modified = image[1]
     # output folder
-    dir_out = ( args.dir_output + "/" + os.path.dirname(image[0].replace(args.dir_input,"")) ).replace("//","/") + "/"
+    dir_out = dir_out_root + os.path.dirname(image[0].replace(args.dir_input,""))
     if not os.path.exists( dir_out ):
         os.makedirs( dir_out )
     filename = os.path.basename( image[0] )
@@ -131,11 +133,12 @@ print( "{} error.".format(len(images_error)) if len(images_error) <= 1 else "{} 
 
 
 # SAVING RESULT
-if args.json != None:
+if json_file != None:
     try:
-        print("JSON: " + args.json)
-        with open( args.json, "w") as result_out:
+        with open( json_file, "w") as result_out:
             json.dump(images_processed + images_notprocessed, result_out, sort_keys=True, indent=1)
+            if args.verbose:
+                print(dir_out + "pyResize.json created.")
     except ValueError:
         print(ValueError)
         exit(-1)
